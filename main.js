@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 var apiCall = "http://localhost:3000/todo";
+=======
+var apiCall ="crudApiLinkHere";
+>>>>>>> 4dd6fb74db369fa27ace4dd7d205473b533217e9
 var form = document.querySelector("#form");
 var items = document.getElementById("items");
 var calcExpense = document.getElementById("calculateExpense");
