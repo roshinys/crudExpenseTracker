@@ -1,88 +1,90 @@
-var apiCall = "https://crudcrud.com/api/2fc15f813db44baeaa6e134d63ba74dd";
+var apiCall = "http://localhost:3000/todo";
 var form = document.querySelector("#form");
 var items = document.getElementById("items");
-
+var calcExpense = document.getElementById("calculateExpense");
+// console.log(calcExpense);
+var total = 0;
 window.addEventListener("DOMContentLoaded", () => {
   getPost();
 });
 
-function getPost() {
-  axios
-    .get(`${apiCall}/todos`)
-    .then((res) => {
-      showUser(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
+var getPost = async () => {
+  try {
+    let res = await axios.get(`${apiCall}/get-todos`);
+    console.log(res);
+    showUser(res.data);
+  } catch (err) {
+    console.log(err);
+  }
+};
 var showUser = (results) => {
+  total = 0;
   results.forEach((result) => {
     showUserInFront(result);
   });
 };
 
 var showUserInFront = (result) => {
-  child = `<li id=${result._id}>${result.expense}-${result.description}-${result.category}
-  <button value=${result._id} class="edit" onclick=editPost("${result._id}")>edit</button>
-  <button value=${result._id} class="delete" onclick=deletePost("${result._id}")>delete</button>
+  total += parseInt(result.expense);
+  calcExpense.innerHTML = `Total Expense = ${total}`;
+  child = `<li id=${result.id}>${result.expense}-${result.description}-${result.category}
+  <button value=${result.id} class="edit" onclick=editPost("${result.id}")>edit</button>
+  <button value=${result.id} class="delete" onclick=deletePost("${result.id}",${result.expense})>delete</button>
   </li>`;
   items.innerHTML = items.innerHTML + child;
 };
 
-var addForm = (e) => {
+var addForm = async (e) => {
   e.preventDefault();
   var expense = e.target.expense.value;
   var description = e.target.description.value;
   var category = e.target.category.value;
   // console.log(expense, description, category);
-  axios
-    .post(`${apiCall}/todos`, {
-      expense: expense,
-      description: description,
-      category: category,
-    })
-    .then((result) => {
-      showUserInFront(result.data);
-    })
-    .catch((err) => {
-      console.log("something went wrong " + err);
-    });
+  var newExpense = {
+    expense: expense,
+    description: description,
+    category: category,
+  };
+  try {
+    let res = await axios.post(`${apiCall}/add-todo`, newExpense);
+    // console.log(res);
+    showUserInFront(res.data);
+  } catch (err) {
+    console.log(err);
+  }
 };
 form.addEventListener("submit", addForm);
 
-function deletePost(id) {
-  axios
-    .delete(`${apiCall}/todos/${id}`)
-    .then((res) => {
-      console.log("deleted post with id = ", id);
-      removeUserFromScreen(id);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
-function editPost(id) {
+var deletePost = async (id, expense) => {
+  let res = await axios.delete(`${apiCall}/del-todo/${id}`);
+  console.log(res.status);
+  total -= parseInt(expense);
+  calcExpense.innerHTML = `Total Expense = ${total}`;
+  if (res.status === 200) {
+    removeUserFromScreen(id);
+  } else {
+    console.log("smtg went wrong");
+  }
+};
+var editPost = async (id) => {
   var ne = document.querySelector("#expense").value;
   var nd = document.querySelector("#description").value;
   var nc = document.querySelector(".category").value;
-  console.log(ne, nd, nc);
-  axios
-    .put(`${apiCall}/todos/${id}`, {
-      expense: ne,
-      description: nd,
-      category: nc,
-    })
-    .then((res) => {
-      console.log("edited post ", id);
-      console.log(res);
-      items.innerHTML = "";
-      getPost();
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
+  // console.log(ne, nd, nc);
+  var updatedExpense = {
+    expense: ne,
+    description: nd,
+    category: nc,
+  };
+  let res = await axios.put(`${apiCall}/update-todo/${id}`, updatedExpense);
+  console.log(res);
+  if (res.status === 200) {
+    items.innerHTML = "";
+    getPost();
+  } else {
+    console.log("smtg went wrong");
+  }
+};
 function removeUserFromScreen(id) {
   const parentNode = document.getElementById("items");
   const childNode = document.getElementById(id);
